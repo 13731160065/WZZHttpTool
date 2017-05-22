@@ -11,7 +11,7 @@
 typedef enum {
     WZZHttpToolBodyType_textPlain = 0,
     WZZHttpToolBodyType_jsonData,
-    WZZHttpToolBodyType_default = WZZHttpToolBodyType_jsonData
+    WZZHttpToolBodyType_default = WZZHttpToolBodyType_textPlain
 }WZZHttpToolBodyType;
 
 @interface WZZHttpTool : NSObject

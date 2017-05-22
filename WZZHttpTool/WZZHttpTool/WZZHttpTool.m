@@ -155,7 +155,7 @@ successBlock:(void(^)(id httpResponse))successBlock
    httpBody:(NSDictionary *)bodyDic
 successBlock:(void(^)(id httpResponse))successBlock
 failedBlock:(void(^)(NSError * httpError))failedBlock {
-    [self requestWithMethod:@"POST" url:url httpHeader:nil httpBody:bodyDic bodyType:WZZHttpToolBodyType_default successBlock:^(id httpResponse) {
+    [self requestWithMethod:@"PUT" url:url httpHeader:nil httpBody:bodyDic bodyType:WZZHttpToolBodyType_default successBlock:^(id httpResponse) {
         if (successBlock) {
             successBlock(httpResponse);
         }
@@ -173,7 +173,7 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
       httpBody:(NSDictionary *)bodyDic
   successBlock:(void(^)(id httpResponse))successBlock
    failedBlock:(void(^)(NSError * httpError))failedBlock {
-    [self requestWithMethod:@"POST" url:url httpHeader:nil httpBody:bodyDic bodyType:WZZHttpToolBodyType_default successBlock:^(id httpResponse) {
+    [self requestWithMethod:@"DELETE" url:url httpHeader:nil httpBody:bodyDic bodyType:WZZHttpToolBodyType_default successBlock:^(id httpResponse) {
         if (successBlock) {
             successBlock(httpResponse);
         }
