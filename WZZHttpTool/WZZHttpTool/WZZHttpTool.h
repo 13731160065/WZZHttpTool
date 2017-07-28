@@ -16,6 +16,8 @@ typedef enum {
 
 @interface WZZHttpTool : NSObject
 
+@property (nonatomic, assign) WZZHttpToolBodyType bodyType;
+
 + (instancetype)shareInstance;
 
 /**

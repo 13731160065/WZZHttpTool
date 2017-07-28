@@ -23,6 +23,7 @@ static WZZHttpTool * tool;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         tool = [[WZZHttpTool alloc] init];
+        tool.bodyType = WZZHttpToolBodyType_default;
     });
     return tool;
 }
@@ -119,7 +120,7 @@ static WZZHttpTool * tool;
 + (void)GET:(NSString *)url
 successBlock:(void(^)(id httpResponse))successBlock
 failedBlock:(void(^)(NSError * httpError))failedBlock {
-    [self requestWithMethod:@"GET" url:url httpHeader:nil httpBody:nil bodyType:WZZHttpToolBodyType_default successBlock:^(id httpResponse) {
+    [self requestWithMethod:@"GET" url:url httpHeader:nil httpBody:nil bodyType:[WZZHttpTool shareInstance].bodyType successBlock:^(id httpResponse) {
         if (successBlock) {
             successBlock(httpResponse);
         }
@@ -137,7 +138,7 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     httpBody:(NSDictionary *)bodyDic
 successBlock:(void(^)(id httpResponse))successBlock
  failedBlock:(void(^)(NSError * httpError))failedBlock {
-    [self requestWithMethod:@"POST" url:url httpHeader:nil httpBody:bodyDic bodyType:WZZHttpToolBodyType_default successBlock:^(id httpResponse) {
+    [self requestWithMethod:@"POST" url:url httpHeader:nil httpBody:bodyDic bodyType:[WZZHttpTool shareInstance].bodyType successBlock:^(id httpResponse) {
         if (successBlock) {
             successBlock(httpResponse);
         }
@@ -155,7 +156,7 @@ successBlock:(void(^)(id httpResponse))successBlock
    httpBody:(NSDictionary *)bodyDic
 successBlock:(void(^)(id httpResponse))successBlock
 failedBlock:(void(^)(NSError * httpError))failedBlock {
-    [self requestWithMethod:@"PUT" url:url httpHeader:nil httpBody:bodyDic bodyType:WZZHttpToolBodyType_default successBlock:^(id httpResponse) {
+    [self requestWithMethod:@"PUT" url:url httpHeader:nil httpBody:bodyDic bodyType:[WZZHttpTool shareInstance].bodyType successBlock:^(id httpResponse) {
         if (successBlock) {
             successBlock(httpResponse);
         }
@@ -173,7 +174,7 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
       httpBody:(NSDictionary *)bodyDic
   successBlock:(void(^)(id httpResponse))successBlock
    failedBlock:(void(^)(NSError * httpError))failedBlock {
-    [self requestWithMethod:@"DELETE" url:url httpHeader:nil httpBody:bodyDic bodyType:WZZHttpToolBodyType_default successBlock:^(id httpResponse) {
+    [self requestWithMethod:@"DELETE" url:url httpHeader:nil httpBody:bodyDic bodyType:[WZZHttpTool shareInstance].bodyType successBlock:^(id httpResponse) {
         if (successBlock) {
             successBlock(httpResponse);
         }

@@ -136,6 +136,25 @@ void showMessage(id msg) {
                          @"name":@"智慧停车登录",
                          @"block":aBlock
                          }];
+    
+    //测试php POST接口
+    aBlock = ^{
+        [WZZHttpTool POST:@"http://110.240.123.244:38080/phpApi/helloGet.php"
+                 httpBody:@{
+                            @"arg1":@"aaa",
+                            @"arg2":@"bbb"
+                            }
+             successBlock:^(id httpResponse) {
+                 showMessage(httpResponse);
+             }
+              failedBlock:^(NSError *httpError) {
+                  showMessage(httpError);
+              }];
+    };
+    [dataArr addObject:@{
+                         @"name":@"测试php POST接口",
+                         @"block":aBlock
+                         }];
 
     [mainTableView reloadData];
 }
