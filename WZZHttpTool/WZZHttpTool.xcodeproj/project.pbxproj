@@ -16,6 +16,7 @@
 		710344DB1ED04A6D0007AEF7 /* WZZHttpToolTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 710344DA1ED04A6D0007AEF7 /* WZZHttpToolTests.m */; };
 		710344E61ED04A6D0007AEF7 /* WZZHttpToolUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 710344E51ED04A6D0007AEF7 /* WZZHttpToolUITests.m */; };
 		710344F51ED0552E0007AEF7 /* WZZHttpTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 710344F41ED0552E0007AEF7 /* WZZHttpTool.m */; };
+		C51AE5251FDF919D00CE60AC /* imggg.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C51AE5241FDF919400CE60AC /* imggg.jpg */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +55,7 @@
 		710344E71ED04A6D0007AEF7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		710344F31ED0552E0007AEF7 /* WZZHttpTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WZZHttpTool.h; sourceTree = "<group>"; };
 		710344F41ED0552E0007AEF7 /* WZZHttpTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WZZHttpTool.m; sourceTree = "<group>"; };
+		C51AE5241FDF919400CE60AC /* imggg.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = imggg.jpg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +112,7 @@
 				710344C71ED04A6D0007AEF7 /* ViewController.m */,
 				710344F31ED0552E0007AEF7 /* WZZHttpTool.h */,
 				710344F41ED0552E0007AEF7 /* WZZHttpTool.m */,
+				C51AE5241FDF919400CE60AC /* imggg.jpg */,
 				710344C91ED04A6D0007AEF7 /* Main.storyboard */,
 				710344CC1ED04A6D0007AEF7 /* Assets.xcassets */,
 				710344CE1ED04A6D0007AEF7 /* LaunchScreen.storyboard */,
@@ -252,6 +255,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C51AE5251FDF919D00CE60AC /* imggg.jpg in Resources */,
 				710344D01ED04A6D0007AEF7 /* LaunchScreen.storyboard in Resources */,
 				710344CD1ED04A6D0007AEF7 /* Assets.xcassets in Resources */,
 				710344CB1ED04A6D0007AEF7 /* Main.storyboard in Resources */,

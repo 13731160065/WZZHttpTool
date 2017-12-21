@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+@class WZZPOSTFormData;
 
 typedef enum {
     WZZHttpToolBodyType_textPlain = 0,
@@ -61,6 +62,20 @@ successBlock:(void(^)(id httpResponse))successBlock
  failedBlock:(void(^)(NSError * httpError))failedBlock;
 
 /**
+ POST请求带文件
+ POST           url地址
+ formDataBlock  表单数据
+ httpBody       请求体
+ successBlock   成功回调
+ failedBlock    失败回调
+ */
++ (void)POST:(NSString *)url
+ addFormData:(void(^)(WZZPOSTFormData * formData))formDataBlock
+    httpBody:(NSDictionary *)bodyDic
+successBlock:(void(^)(id httpResponse))successBlock
+ failedBlock:(void(^)(NSError * httpError))failedBlock;
+
+/**
  PUT请求
  PUT            url地址
  httpBody       请求体
@@ -94,5 +109,69 @@ failedBlock:(void(^)(NSError * httpError))failedBlock;
  对象转json字符串
  */
 + (NSString *)objectToJson:(id)object;
+
+@end
+
+typedef enum {
+    WZZHttpTool_FormDataType_ImagePNG,//png图片
+    WZZHttpTool_FormDataType_ImageJPG,//jpg图片
+}WZZHttpTool_FormDataType;
+
+#pragma mark - 表单提交数据
+@interface WZZPOSTFormData : NSObject
+
+/**
+ 总数量
+ */
+@property (nonatomic, assign, readonly) NSUInteger count;
+
+/**
+ 数据数组
+ */
+@property (nonatomic, strong, readonly) NSArray * formDataArray;
+
+/**
+ 添加表单数据
+ data   数据
+ key    传给后台的键
+ type   数据类型
+ */
+- (void)addData:(NSData *)data
+            key:(NSString *)key
+           type:(WZZHttpTool_FormDataType)type;
+
+/**
+ 添加表单数据
+ url    链接
+ key    传给后台的键
+ type   数据类型
+ */
+- (void)addUrl:(NSURL *)url
+           key:(NSString *)key
+          type:(WZZHttpTool_FormDataType)type;
+
+/**
+ 添加表单数据
+ data       数据
+ key        传给后台的键
+ fileName   传给后台的文件名
+ type       数据类型
+ */
+- (void)addData:(NSData *)data
+            key:(NSString *)key
+       fileName:(NSString *)fileName
+           type:(NSString *)type;
+
+/**
+ 添加表单数据
+ url        链接
+ key        传给后台的键
+ fileName   传给后台的文件名
+ type       数据类型
+ */
+- (void)addUrl:(NSURL *)url
+           key:(NSString *)key
+      fileName:(NSString *)fileName
+          type:(NSString *)type;
 
 @end

@@ -155,7 +155,31 @@ void showMessage(id msg) {
                          @"name":@"测试php POST接口",
                          @"block":aBlock
                          }];
-
+    
+    //测试上传图片php POST接口
+    aBlock = ^{
+        [WZZHttpTool POST:@"http://47.94.91.101/Documents/upload.php"
+              addFormData:^(WZZPOSTFormData * formData) {
+                  UIImage * image = [UIImage imageNamed:@"imggg.jpg"];
+                  NSData * data = UIImageJPEGRepresentation(image, 1.0f);
+                  [formData addData:data key:@"file1" type:WZZHttpTool_FormDataType_ImageJPG];
+              }
+                 httpBody:@{
+                            @"abc":@"aaa",
+                            @"arg1":@"bbb"
+                            }
+             successBlock:^(id httpResponse) {
+                 showMessage(httpResponse);
+             }
+              failedBlock:^(NSError *httpError) {
+                  showMessage(httpError);
+              }];
+    };
+    [dataArr addObject:@{
+                         @"name":@"测试上传图片php",
+                         @"block":aBlock
+                         }];
+    
     [mainTableView reloadData];
 }
 
