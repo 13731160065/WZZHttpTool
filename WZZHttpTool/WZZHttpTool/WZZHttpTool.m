@@ -101,6 +101,7 @@ static WZZHttpTool * tool;
     
     //判断是否表单提交
     if (formFile) {
+        //formFile有东西，是multipart形式的请求
         //表单头标志
         NSArray * formDataArr = formFile;
         if (formDataArr.count) {
