@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class WZZPOSTFormData;
+@class WZZDownloadTaskModel;
 
 typedef enum {
     WZZHttpToolBodyType_textPlain = 0,
@@ -17,9 +18,19 @@ typedef enum {
 
 @interface WZZHttpTool : NSObject
 
+/**
+ 请求体类型
+ */
 @property (nonatomic, assign) WZZHttpToolBodyType bodyType;
 
+/**
+ 下载数据
+ */
+@property (nonatomic, strong, readonly) NSDictionary <NSString *, WZZDownloadTaskModel *>* downloadModelDic;
+
 + (instancetype)shareInstance;
+
+#pragma mark - 网络请求
 
 /**
  通用网络请求
@@ -99,6 +110,45 @@ failedBlock:(void(^)(NSError * httpError))failedBlock;
   successBlock:(void(^)(id httpResponse))successBlock
    failedBlock:(void(^)(NSError * httpError))failedBlock;
 
+#pragma mark - 下载
+
+/**
+ 开始下载
+ 开始下载后，本类会自动添加一条模型到downloadModelDic字典中
+ 
+ @param url 链接
+ @return 模型
+ */
++ (WZZDownloadTaskModel *)downloadWithUrl:(NSString *)url;
+
+/**
+ 恢复下载
+ 开始下载后，本类会自动添加一条模型到downloadModelDic字典中
+
+ @param taskId 任务id
+ @return 模型
+ */
++ (WZZDownloadTaskModel *)resumeDownloadWithTaskId:(NSString *)taskId;
+
+/**
+ 取消下载/删除下载
+
+ @param taskId 任务id
+ */
++ (void)cancelDownloadWithTaskId:(NSString *)taskId;
+
+/**
+ 本地存储下载数据
+ */
++ (void)saveDownloadData;
+
+/**
+ 读取本地下载数据
+ */
++ (void)loadDownloadData;
+
+
+
 #pragma mark - 工具
 /**
  json转对象
@@ -112,12 +162,13 @@ failedBlock:(void(^)(NSError * httpError))failedBlock;
 
 @end
 
+#pragma mark - 表单提交数据
+
 typedef enum {
     WZZHttpTool_FormDataType_ImagePNG,//png图片
     WZZHttpTool_FormDataType_ImageJPG,//jpg图片
 }WZZHttpTool_FormDataType;
 
-#pragma mark - 表单提交数据
 @interface WZZPOSTFormData : NSObject
 
 /**
@@ -173,5 +224,90 @@ typedef enum {
            key:(NSString *)key
       fileName:(NSString *)fileName
           type:(NSString *)type;
+
+@end
+
+#pragma mark - 下载任务模型
+
+typedef enum : NSUInteger {
+    WZZHttpTool_Download_State_None = 0,//未下载
+    WZZHttpTool_Download_State_Success,//成功
+    WZZHttpTool_Download_State_Failed,//失败
+    WZZHttpTool_Download_State_Loading,//下载中
+    WZZHttpTool_Download_State_Pause,//暂停
+    WZZHttpTool_Download_State_Stop,//停止
+} WZZHttpTool_Download_State;
+
+@interface WZZDownloadTaskModel : NSObject
+
+/**
+ 任务id
+ */
+@property (nonatomic, strong) NSString * taskId;
+
+/**
+ 备用id，可用于绑定下载项
+ */
+@property (nonatomic, strong) NSString * tmpId;
+
+/**
+ url
+ */
+@property (nonatomic, strong) NSString * url;
+
+/**
+ 下载进度
+ */
+@property (nonatomic, strong) NSNumber * progress;
+
+/**
+ 总大小
+ */
+@property (nonatomic, strong) NSNumber * totalByte;
+
+/**
+ 已下载大小
+ */
+@property (nonatomic, strong) NSNumber * currentByte;
+
+/**
+ 下载位置
+ */
+@property (nonatomic, strong) NSURL * location;
+
+/**
+ 下载状态
+ */
+@property (nonatomic, assign) WZZHttpTool_Download_State state;
+
+/**
+ 下载任务
+ */
+@property (nonatomic, strong) NSURLSessionDownloadTask * task;
+
+/**
+ 进度回调
+ */
+@property (nonatomic, strong) void (^progressBlock)(NSNumber * progress);
+
+/**
+ 下载完成
+ */
+@property (nonatomic, strong) void (^downloadCompleteBlock)(NSURL * location, NSError * error);
+
+/**
+ 停止下载，可继续
+ */
+- (void)stop;
+
+/**
+ 暂停
+ */
+- (void)pause;
+
+/**
+ 继续
+ */
+- (void)resume;
 
 @end

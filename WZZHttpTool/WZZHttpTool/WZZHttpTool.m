@@ -7,14 +7,15 @@
 //
 
 #import "WZZHttpTool.h"
+#import <CommonCrypto/CommonDigest.h>
 
 #define WZZHTTPTOOLBOUNDARY @"${wzzhttptoolboundary}"
 
-static WZZHttpTool * tool;
+static WZZHttpTool * wzzHttpTool;
 
-@interface WZZHttpTool ()<NSURLSessionDelegate>
+@interface WZZHttpTool ()<NSURLSessionDelegate, NSURLSessionDownloadDelegate>
 {
-    NSURLSession * session;
+    NSURLSession * downloadSession;//下载会话
 }
 
 @end
@@ -25,10 +26,16 @@ static WZZHttpTool * tool;
 + (instancetype)shareInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        tool = [[WZZHttpTool alloc] init];
-        tool.bodyType = WZZHttpToolBodyType_default;
+        wzzHttpTool = [[WZZHttpTool alloc] init];
+        //请求体类型
+        wzzHttpTool.bodyType = WZZHttpToolBodyType_default;
+        //下载会话
+        NSURLSessionConfiguration * conf = [NSURLSessionConfiguration defaultSessionConfiguration];
+        wzzHttpTool->downloadSession = [NSURLSession sessionWithConfiguration:conf delegate:wzzHttpTool delegateQueue:nil];
+        //加载下载数据
+        [self loadDownloadData];
     });
-    return tool;
+    return wzzHttpTool;
 }
 
 //MARK:通用普通请求
@@ -298,6 +305,128 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     }];
 }
 
+#pragma mark - 下载
+
+//MARK:开始下载
++ (WZZDownloadTaskModel *)downloadWithUrl:(NSString *)url {
+    return [self downloadWithUrl:url bytes:@(0)];
+}
+
+//MARK:开始下载，带位置
++ (WZZDownloadTaskModel *)downloadWithUrl:(NSString *)url bytes:(NSNumber *)bytes {
+    wzzHttpTool = [WZZHttpTool shareInstance];
+    //配置请求
+    NSURL * downUrl = [NSURL URLWithString:url];
+    NSMutableURLRequest * downRequest = [NSMutableURLRequest requestWithURL:downUrl];
+    [downRequest setValue:[NSString stringWithFormat:@"bytes=%zd-", bytes.integerValue] forHTTPHeaderField:@"Range"];
+    
+    //生成任务
+    NSURLSessionDownloadTask * task = [wzzHttpTool->downloadSession downloadTaskWithRequest:downRequest];
+    [task resume];
+    
+    //生成模型
+    NSString * tid = [self MD5:task.currentRequest.URL.absoluteString];
+    WZZDownloadTaskModel * model;
+    if (bytes.integerValue) {
+        //继续
+        NSDictionary * dic = wzzHttpTool.downloadModelDic;
+        model = dic[tid];
+        model.taskId = tid;
+        model.url = url;
+        model.state = WZZHttpTool_Download_State_Loading;
+        model.task = task;
+    } else {
+        //重新
+        model = [[WZZDownloadTaskModel alloc] init];
+        model.taskId = tid;
+        model.url = url;
+        model.progress = @(0);
+        model.state = WZZHttpTool_Download_State_Loading;
+        model.task = task;
+        NSMutableDictionary * dic = [NSMutableDictionary dictionaryWithDictionary:wzzHttpTool.downloadModelDic];
+        dic[tid] = model;
+        wzzHttpTool->_downloadModelDic = [NSDictionary dictionaryWithDictionary:dic];
+    }
+    
+    return model;
+}
+
+//MARK:继续下载
++ (WZZDownloadTaskModel *)resumeDownloadWithTaskId:(NSString *)taskId {
+    wzzHttpTool = [WZZHttpTool shareInstance];
+    WZZDownloadTaskModel * model = wzzHttpTool.downloadModelDic[taskId];
+#if 1
+    [self downloadWithUrl:model.url bytes:model.currentByte];
+    return model;
+#else
+    if (model.state == WZZHttpTool_Download_State_Stop) {
+        
+    }
+    if (model.resumeData) {
+        NSURLSessionDownloadTask * task = [wzzHttpTool->downloadSession downloadTaskWithResumeData:model.resumeData];
+        [task resume];
+        NSString * tid = [self MD5:task.currentRequest.URL.absoluteString];
+        model.taskId = tid;
+        model.url = task.currentRequest.URL.absoluteString;
+        model.state = WZZHttpTool_Download_State_Loading;
+        model.task = task;
+        NSMutableDictionary * dic = [NSMutableDictionary dictionaryWithDictionary:wzzHttpTool.downloadModelDic];
+        dic[tid] = model;
+        wzzHttpTool->_downloadModelDic = [NSDictionary dictionaryWithDictionary:dic];
+        return model;
+    }
+    return nil;
+#endif
+}
+
+//MARK:取消下载/删除下载
++ (void)cancelDownloadWithTaskId:(NSString *)taskId {
+    wzzHttpTool = [WZZHttpTool shareInstance];
+    WZZDownloadTaskModel * model = wzzHttpTool.downloadModelDic[taskId];
+    if (model.task) {
+        //取消任务
+        [model.task cancel];
+        //移除数据
+        NSMutableDictionary * dic = [NSMutableDictionary dictionaryWithDictionary:wzzHttpTool.downloadModelDic];
+        model.state = WZZHttpTool_Download_State_None;
+        wzzHttpTool->_downloadModelDic = [NSDictionary dictionaryWithDictionary:dic];
+        if (model.location) {
+            //如果已下载删除下载
+            [[NSFileManager defaultManager] removeItemAtURL:model.location error:nil];
+        }
+        dic[taskId] = nil;
+    }
+}
+
+/**
+ 保存下载数据
+ */
++ (void)saveDownloadData {
+    wzzHttpTool = [WZZHttpTool shareInstance];
+    if (wzzHttpTool.downloadModelDic) {
+        NSArray * arr = wzzHttpTool.downloadModelDic.allKeys;
+        for (int i = 0; i < arr.count; i++) {
+            NSString * key = arr[i];
+            WZZDownloadTaskModel * model = wzzHttpTool.downloadModelDic[key];
+            [model stop];
+        }
+    }
+    NSData * data = [NSKeyedArchiver archivedDataWithRootObject:wzzHttpTool.downloadModelDic];
+    [[NSUserDefaults standardUserDefaults] setObject:data forKey:@"WZZHttpTool_downloadModelDic"];
+}
+
+/**
+ 加载下载数据
+ */
++ (void)loadDownloadData {
+    NSData * data = [[NSUserDefaults standardUserDefaults] objectForKey:@"WZZHttpTool_downloadModelDic"];
+    if (data) {
+        wzzHttpTool->_downloadModelDic = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    } else {
+        wzzHttpTool->_downloadModelDic = nil;
+    }
+}
+
 #pragma mark - 工具
 //MARK:json字符串转对象
 + (id)jsonToObject:(NSString *)jsonString {
@@ -328,12 +457,28 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 }
 
+//md5
++ (NSString *)MD5:(NSString *)string {
+    const char *cStr = [string UTF8String];
+    unsigned char digest[CC_MD5_DIGEST_LENGTH];
+    CC_MD5( cStr, (CC_LONG)strlen(cStr), digest );
+    NSMutableString *output = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
+    
+    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++) {
+        [output appendFormat:@"%02x", digest[i]];
+    }
+    
+    return output;
+}
+
 #pragma mark - NSURLSessionDataDelegate
 //只要请求的地址是HTTPS的, 就会调用这个代理方法
 //challenge:质询
 //NSURLAuthenticationMethodServerTrust:服务器信任
 //MARK:https代理
-- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
 {
     if (![challenge.protectionSpace.authenticationMethod isEqualToString:@"NSURLAuthenticationMethodServerTrust"]) return;
     /*
@@ -347,6 +492,73 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     
     completionHandler(NSURLSessionAuthChallengeUseCredential,credential);
 }
+
+
+
+/**
+ 下载进度
+
+ @param session 会话
+ @param downloadTask 任务
+ @param bytesWritten 本次写入
+ @param totalBytesWritten 总写入
+ @param totalBytesExpectedToWrite 总量
+ */
+- (void)URLSession:(NSURLSession *)session
+      downloadTask:(NSURLSessionDownloadTask *)downloadTask
+      didWriteData:(int64_t)bytesWritten
+ totalBytesWritten:(int64_t)totalBytesWritten
+totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
+    NSString * taskId = [WZZHttpTool MD5:downloadTask.currentRequest.URL.absoluteString];
+    WZZDownloadTaskModel * model = _downloadModelDic[taskId];
+    model.progress = @((double)totalBytesWritten/(double)totalBytesExpectedToWrite);
+    model.currentByte = @(totalBytesWritten);
+    model.totalByte = @(totalBytesExpectedToWrite);
+    if (model.progressBlock) {
+        model.progressBlock(model.progress);
+    }
+}
+
+/**
+ 下载结束
+
+ @param session 会话
+ @param downloadTask 任务
+ @param location 位置
+ */
+- (void)URLSession:(nonnull NSURLSession *)session
+      downloadTask:(nonnull NSURLSessionDownloadTask *)downloadTask
+didFinishDownloadingToURL:(nonnull NSURL *)location {
+    NSString * taskId = [WZZHttpTool MD5:downloadTask.currentRequest.URL.absoluteString];
+    WZZDownloadTaskModel * model = _downloadModelDic[taskId];
+    model.state = WZZHttpTool_Download_State_Success;
+    if (model.downloadCompleteBlock) {
+        model.downloadCompleteBlock(location, nil);
+    }
+}
+
+/**
+ 下载失败
+
+ @param session 会话
+ @param task 任务
+ @param error 错误
+ */
+- (void)URLSession:(NSURLSession *)session
+              task:(NSURLSessionTask *)task
+didCompleteWithError:(NSError *)error {
+    NSString * taskId = [WZZHttpTool MD5:task.currentRequest.URL.absoluteString];
+    WZZDownloadTaskModel * model = _downloadModelDic[taskId];
+    if (session == downloadSession) {
+        if (error) {
+            model.state = WZZHttpTool_Download_State_Failed;
+            if (model.downloadCompleteBlock) {
+                model.downloadCompleteBlock(nil, error);
+            }
+        }
+    }
+}
+
 
 @end
 
@@ -459,11 +671,11 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     
     //添加数据
     [_dataArr addObject:@{
-                              @"data":data,
-                              @"name":fileName,
-                              @"type":type,
-                              @"key":key
-                              }];
+                          @"data":data,
+                          @"name":fileName,
+                          @"type":type,
+                          @"key":key
+                          }];
     _formDataArray = [NSArray arrayWithArray:_dataArr];
 }
 
@@ -503,6 +715,78 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
                               @"key":key
                               }];
     _formDataArray = [NSArray arrayWithArray:_dataArr];
+}
+
+@end
+
+#pragma mark - 下载模型
+@interface WZZDownloadTaskModel ()<NSCoding>
+{
+    void(^_progressBlock)(NSNumber *);
+}
+
+@end
+
+@implementation WZZDownloadTaskModel
+
+/**
+ 解压
+
+ @param aDecoder 解压者
+ @return 对象
+ */
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self) {
+        _taskId = [aDecoder decodeObjectForKey:@"_taskId"];
+        _url = [aDecoder decodeObjectForKey:@"_url"];
+        _progress = [aDecoder decodeObjectForKey:@"_progress"];
+        _state = [aDecoder decodeIntegerForKey:@"_state"];
+        _location = [aDecoder decodeObjectForKey:@"_location"];
+        _totalByte = [aDecoder decodeObjectForKey:@"_totalByte"];
+        _currentByte = [aDecoder decodeObjectForKey:@"_currentByte"];
+        _tmpId = [aDecoder decodeObjectForKey:@"_tmpId"];
+    }
+    return self;
+}
+
+/**
+ 压缩
+
+ @param aCoder 压缩者
+ */
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+    [aCoder encodeInteger:_state forKey:@"_state"];
+    [aCoder encodeObject:_taskId forKey:@"_taskId"];
+    [aCoder encodeObject:_url forKey:@"_url"];
+    [aCoder encodeObject:_progress forKey:@"_progress"];
+    [aCoder encodeObject:_location forKey:@"_location"];
+    [aCoder encodeObject:_totalByte forKey:@"_totalByte"];
+    [aCoder encodeObject:_currentByte forKey:@"_currentByte"];
+    [aCoder encodeObject:_tmpId forKey:@"_tmpId"];
+}
+
+//MARK:停止下载，可继续
+- (void)stop {
+    if (_task) {
+        if (_state == WZZHttpTool_Download_State_Loading || _state == WZZHttpTool_Download_State_Pause) {
+            _state = WZZHttpTool_Download_State_Stop;
+            [_task cancel];
+        }
+    }
+}
+
+//MARK:暂停
+- (void)pause {
+    self.state = WZZHttpTool_Download_State_Pause;
+    [_task suspend];
+}
+
+//MARK:继续
+- (void)resume {
+    self.state = WZZHttpTool_Download_State_Loading;
+    [_task resume];
 }
 
 @end

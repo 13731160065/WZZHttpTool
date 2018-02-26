@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "WZZHttpTool.h"
+#import "WZZDownloadVC.h"
 
 static ViewController * selfVC;
 static UIAlertController * alt;
@@ -180,6 +181,17 @@ void showMessage(id msg) {
                          @"block":aBlock
                          }];
     
+    
+    aBlock = ^{
+        WZZDownloadVC * vc = [[WZZDownloadVC alloc] init];
+        [self presentViewController:vc animated:YES completion:nil];
+    };
+    [dataArr addObject:@{
+                         @"name":@"多任务下载",
+                         @"block":aBlock,
+                         @"hud":@(NO)
+                         }];
+    
     [mainTableView reloadData];
 }
 
@@ -200,9 +212,14 @@ void showMessage(id msg) {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     void(^aBlock)();
     aBlock = dataArr[indexPath.row][@"block"];
-    alt = [UIAlertController alertControllerWithTitle:@"请稍等" message:nil preferredStyle:UIAlertControllerStyleAlert];
-    [self presentViewController:alt animated:YES completion:nil];
-    aBlock();
+    if ([dataArr[indexPath.row][@"hud"] integerValue]) {
+        alt = [UIAlertController alertControllerWithTitle:@"请稍等" message:nil preferredStyle:UIAlertControllerStyleAlert];
+        [self presentViewController:alt animated:YES completion:^{
+            aBlock();
+        }];
+    } else {
+        aBlock();
+    }
 }
 
 @end

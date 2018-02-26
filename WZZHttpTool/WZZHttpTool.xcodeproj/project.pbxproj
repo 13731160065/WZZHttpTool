@@ -17,6 +17,8 @@
 		710344E61ED04A6D0007AEF7 /* WZZHttpToolUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 710344E51ED04A6D0007AEF7 /* WZZHttpToolUITests.m */; };
 		710344F51ED0552E0007AEF7 /* WZZHttpTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 710344F41ED0552E0007AEF7 /* WZZHttpTool.m */; };
 		C51AE5251FDF919D00CE60AC /* imggg.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C51AE5241FDF919400CE60AC /* imggg.jpg */; };
+		C544C09C203FE7D200D20B20 /* WZZDownloadVC.m in Sources */ = {isa = PBXBuildFile; fileRef = C544C09A203FE7D200D20B20 /* WZZDownloadVC.m */; };
+		C544C09D203FE7D200D20B20 /* WZZDownloadVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = C544C09B203FE7D200D20B20 /* WZZDownloadVC.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +58,9 @@
 		710344F31ED0552E0007AEF7 /* WZZHttpTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WZZHttpTool.h; sourceTree = "<group>"; };
 		710344F41ED0552E0007AEF7 /* WZZHttpTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WZZHttpTool.m; sourceTree = "<group>"; };
 		C51AE5241FDF919400CE60AC /* imggg.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = imggg.jpg; sourceTree = "<group>"; };
+		C544C099203FE7D200D20B20 /* WZZDownloadVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WZZDownloadVC.h; sourceTree = "<group>"; };
+		C544C09A203FE7D200D20B20 /* WZZDownloadVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WZZDownloadVC.m; sourceTree = "<group>"; };
+		C544C09B203FE7D200D20B20 /* WZZDownloadVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = WZZDownloadVC.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +115,9 @@
 				710344C41ED04A6D0007AEF7 /* AppDelegate.m */,
 				710344C61ED04A6D0007AEF7 /* ViewController.h */,
 				710344C71ED04A6D0007AEF7 /* ViewController.m */,
+				C544C099203FE7D200D20B20 /* WZZDownloadVC.h */,
+				C544C09A203FE7D200D20B20 /* WZZDownloadVC.m */,
+				C544C09B203FE7D200D20B20 /* WZZDownloadVC.xib */,
 				710344F31ED0552E0007AEF7 /* WZZHttpTool.h */,
 				710344F41ED0552E0007AEF7 /* WZZHttpTool.m */,
 				C51AE5241FDF919400CE60AC /* imggg.jpg */,
@@ -258,6 +266,7 @@
 				C51AE5251FDF919D00CE60AC /* imggg.jpg in Resources */,
 				710344D01ED04A6D0007AEF7 /* LaunchScreen.storyboard in Resources */,
 				710344CD1ED04A6D0007AEF7 /* Assets.xcassets in Resources */,
+				C544C09D203FE7D200D20B20 /* WZZDownloadVC.xib in Resources */,
 				710344CB1ED04A6D0007AEF7 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -286,6 +295,7 @@
 				710344C81ED04A6D0007AEF7 /* ViewController.m in Sources */,
 				710344F51ED0552E0007AEF7 /* WZZHttpTool.m in Sources */,
 				710344C51ED04A6D0007AEF7 /* AppDelegate.m in Sources */,
+				C544C09C203FE7D200D20B20 /* WZZDownloadVC.m in Sources */,
 				710344C21ED04A6C0007AEF7 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
