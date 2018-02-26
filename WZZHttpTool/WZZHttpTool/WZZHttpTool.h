@@ -147,7 +147,10 @@ failedBlock:(void(^)(NSError * httpError))failedBlock;
  */
 + (void)loadDownloadData;
 
-
+/**
+ 后台下载模式
+ */
++ (void)downloadBackGroundMode;
 
 #pragma mark - 工具
 /**
@@ -283,7 +286,12 @@ typedef enum : NSUInteger {
 /**
  下载任务
  */
-@property (nonatomic, strong) NSURLSessionDownloadTask * task;
+@property (nonatomic, strong) NSURLSessionDataTask * task;
+
+/**
+ 输出流
+ */
+@property (nonatomic, strong) NSOutputStream * outStream;
 
 /**
  进度回调

@@ -13,9 +13,10 @@
 
 static WZZHttpTool * wzzHttpTool;
 
-@interface WZZHttpTool ()<NSURLSessionDelegate, NSURLSessionDownloadDelegate>
+@interface WZZHttpTool ()<NSURLSessionDelegate, NSURLSessionDataDelegate>
 {
     NSURLSession * downloadSession;//下载会话
+    NSURLSession * downloadBackgroundSession;//后台下载会话
 }
 
 @end
@@ -27,11 +28,16 @@ static WZZHttpTool * wzzHttpTool;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         wzzHttpTool = [[WZZHttpTool alloc] init];
+        
         //请求体类型
         wzzHttpTool.bodyType = WZZHttpToolBodyType_default;
+        
         //下载会话
         NSURLSessionConfiguration * conf = [NSURLSessionConfiguration defaultSessionConfiguration];
         wzzHttpTool->downloadSession = [NSURLSession sessionWithConfiguration:conf delegate:wzzHttpTool delegateQueue:nil];
+        NSURLSessionConfiguration * bgconf = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"WZZHttpTool_downloadBackgroundSession"];
+        wzzHttpTool->downloadBackgroundSession = [NSURLSession sessionWithConfiguration:bgconf delegate:wzzHttpTool delegateQueue:nil];
+        
         //加载下载数据
         [self loadDownloadData];
     });
@@ -318,35 +324,34 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     //配置请求
     NSURL * downUrl = [NSURL URLWithString:url];
     NSMutableURLRequest * downRequest = [NSMutableURLRequest requestWithURL:downUrl];
+#warning wzz这里似乎没生效
     [downRequest setValue:[NSString stringWithFormat:@"bytes=%zd-", bytes.integerValue] forHTTPHeaderField:@"Range"];
     
-    //生成任务
-    NSURLSessionDownloadTask * task = [wzzHttpTool->downloadSession downloadTaskWithRequest:downRequest];
+    NSURLSessionDataTask * task = [wzzHttpTool->downloadSession dataTaskWithRequest:downRequest];
     [task resume];
     
     //生成模型
-    NSString * tid = [self MD5:task.currentRequest.URL.absoluteString];
+    NSString * tid = [self MD5:task.originalRequest.URL.absoluteString];
     WZZDownloadTaskModel * model;
     if (bytes.integerValue) {
         //继续
         NSDictionary * dic = wzzHttpTool.downloadModelDic;
         model = dic[tid];
-        model.taskId = tid;
-        model.url = url;
-        model.state = WZZHttpTool_Download_State_Loading;
-        model.task = task;
     } else {
         //重新
         model = [[WZZDownloadTaskModel alloc] init];
-        model.taskId = tid;
-        model.url = url;
         model.progress = @(0);
-        model.state = WZZHttpTool_Download_State_Loading;
-        model.task = task;
         NSMutableDictionary * dic = [NSMutableDictionary dictionaryWithDictionary:wzzHttpTool.downloadModelDic];
         dic[tid] = model;
         wzzHttpTool->_downloadModelDic = [NSDictionary dictionaryWithDictionary:dic];
     }
+    model.url = url;
+    model.state = WZZHttpTool_Download_State_Loading;
+    model.task = task;
+    model.taskId = tid;
+    NSString * locationStr = [NSString stringWithFormat:@"%@/tmp/%@", NSHomeDirectory(), model.taskId];
+    model.outStream = [NSOutputStream outputStreamWithURL:[NSURL fileURLWithPath:locationStr] append:YES];
+    model.location = [NSURL fileURLWithPath:locationStr];
     
     return model;
 }
@@ -355,28 +360,8 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
 + (WZZDownloadTaskModel *)resumeDownloadWithTaskId:(NSString *)taskId {
     wzzHttpTool = [WZZHttpTool shareInstance];
     WZZDownloadTaskModel * model = wzzHttpTool.downloadModelDic[taskId];
-#if 1
     [self downloadWithUrl:model.url bytes:model.currentByte];
     return model;
-#else
-    if (model.state == WZZHttpTool_Download_State_Stop) {
-        
-    }
-    if (model.resumeData) {
-        NSURLSessionDownloadTask * task = [wzzHttpTool->downloadSession downloadTaskWithResumeData:model.resumeData];
-        [task resume];
-        NSString * tid = [self MD5:task.currentRequest.URL.absoluteString];
-        model.taskId = tid;
-        model.url = task.currentRequest.URL.absoluteString;
-        model.state = WZZHttpTool_Download_State_Loading;
-        model.task = task;
-        NSMutableDictionary * dic = [NSMutableDictionary dictionaryWithDictionary:wzzHttpTool.downloadModelDic];
-        dic[tid] = model;
-        wzzHttpTool->_downloadModelDic = [NSDictionary dictionaryWithDictionary:dic];
-        return model;
-    }
-    return nil;
-#endif
 }
 
 //MARK:取消下载/删除下载
@@ -386,15 +371,18 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     if (model.task) {
         //取消任务
         [model.task cancel];
-        //移除数据
-        NSMutableDictionary * dic = [NSMutableDictionary dictionaryWithDictionary:wzzHttpTool.downloadModelDic];
-        model.state = WZZHttpTool_Download_State_None;
-        wzzHttpTool->_downloadModelDic = [NSDictionary dictionaryWithDictionary:dic];
+        
+        //删除下载
         if (model.location) {
             //如果已下载删除下载
             [[NSFileManager defaultManager] removeItemAtURL:model.location error:nil];
         }
+        
+        //移除数据
+        NSMutableDictionary * dic = [NSMutableDictionary dictionaryWithDictionary:wzzHttpTool.downloadModelDic];
+        model.state = WZZHttpTool_Download_State_None;
         dic[taskId] = nil;
+        wzzHttpTool->_downloadModelDic = [NSDictionary dictionaryWithDictionary:dic];
     }
 }
 
@@ -424,6 +412,22 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
         wzzHttpTool->_downloadModelDic = [NSKeyedUnarchiver unarchiveObjectWithData:data];
     } else {
         wzzHttpTool->_downloadModelDic = nil;
+    }
+}
+
+/**
+ 后台下载模式
+ */
++ (void)downloadBackGroundMode {
+    NSDictionary * dic = [wzzHttpTool downloadModelDic];
+    NSArray * keysArr = [dic allKeys];
+    for (int i = 0; i < keysArr.count; i++) {
+        NSString * key = keysArr[i];
+        WZZDownloadTaskModel * model = dic[key];
+        if (model.state == WZZHttpTool_Download_State_Loading) {
+            [model stop];
+            
+        }
     }
 }
 
@@ -490,55 +494,58 @@ didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
     
     NSURLCredential *credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
     
-    completionHandler(NSURLSessionAuthChallengeUseCredential,credential);
+    completionHandler(NSURLSessionAuthChallengePerformDefaultHandling,credential);
 }
 
-
-
 /**
- 下载进度
+ 接收到数据
 
  @param session 会话
- @param downloadTask 任务
- @param bytesWritten 本次写入
- @param totalBytesWritten 总写入
- @param totalBytesExpectedToWrite 总量
+ @param dataTask 任务
+ @param data 数据
  */
-- (void)URLSession:(NSURLSession *)session
-      downloadTask:(NSURLSessionDownloadTask *)downloadTask
-      didWriteData:(int64_t)bytesWritten
- totalBytesWritten:(int64_t)totalBytesWritten
-totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
-    NSString * taskId = [WZZHttpTool MD5:downloadTask.currentRequest.URL.absoluteString];
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data {
+    NSString * taskId = [WZZHttpTool MD5:dataTask.originalRequest.URL.absoluteString];
     WZZDownloadTaskModel * model = _downloadModelDic[taskId];
-    model.progress = @((double)totalBytesWritten/(double)totalBytesExpectedToWrite);
-    model.currentByte = @(totalBytesWritten);
-    model.totalByte = @(totalBytesExpectedToWrite);
+    
+    //写入数据
+    [model.outStream write:data.bytes maxLength:data.length];
+    
+    model.currentByte = @(model.currentByte.integerValue+data.length);
+    model.progress = @(model.currentByte.doubleValue/model.totalByte.doubleValue);
     if (model.progressBlock) {
         model.progressBlock(model.progress);
     }
 }
 
 /**
- 下载结束
+ 接收到服务器响应
 
  @param session 会话
- @param downloadTask 任务
- @param location 位置
+ @param dataTask 任务
+ @param response 响应
+ @param completionHandler 完成回调
  */
-- (void)URLSession:(nonnull NSURLSession *)session
-      downloadTask:(nonnull NSURLSessionDownloadTask *)downloadTask
-didFinishDownloadingToURL:(nonnull NSURL *)location {
-    NSString * taskId = [WZZHttpTool MD5:downloadTask.currentRequest.URL.absoluteString];
+- (void)URLSession:(NSURLSession *)session
+          dataTask:(NSURLSessionDataTask *)dataTask
+didReceiveResponse:(NSHTTPURLResponse *)response
+ completionHandler:(void (^)(NSURLSessionResponseDisposition))completionHandler {
+    NSString * taskId = [WZZHttpTool MD5:dataTask.originalRequest.URL.absoluteString];
     WZZDownloadTaskModel * model = _downloadModelDic[taskId];
-    model.state = WZZHttpTool_Download_State_Success;
-    if (model.downloadCompleteBlock) {
-        model.downloadCompleteBlock(location, nil);
-    }
+    
+    // 打开流
+    [model.outStream open];
+    
+    //获得服务器这次请求返回数据的总长度
+    NSInteger thisByte = [response.allHeaderFields[@"Content-Length"] integerValue];
+    model.totalByte = @(model.currentByte.integerValue+thisByte);
+    
+    // 接收这个请求，允许接收服务器的数据
+    completionHandler(NSURLSessionResponseAllow);
 }
 
 /**
- 下载失败
+ 下载完成
 
  @param session 会话
  @param task 任务
@@ -547,13 +554,21 @@ didFinishDownloadingToURL:(nonnull NSURL *)location {
 - (void)URLSession:(NSURLSession *)session
               task:(NSURLSessionTask *)task
 didCompleteWithError:(NSError *)error {
-    NSString * taskId = [WZZHttpTool MD5:task.currentRequest.URL.absoluteString];
+    NSString * taskId = [WZZHttpTool MD5:task.originalRequest.URL.absoluteString];
     WZZDownloadTaskModel * model = _downloadModelDic[taskId];
     if (session == downloadSession) {
-        if (error) {
-            model.state = WZZHttpTool_Download_State_Failed;
-            if (model.downloadCompleteBlock) {
-                model.downloadCompleteBlock(nil, error);
+        if (model.downloadCompleteBlock) {
+            if (error) {
+                if (error.code == -1001) {
+                    //暂停时间过长，超时
+                    [model stop];
+                } else {
+                    model.state = WZZHttpTool_Download_State_Failed;
+                    model.downloadCompleteBlock(nil, error);
+                }
+            } else {
+                model.state = WZZHttpTool_Download_State_Success;
+                model.downloadCompleteBlock(model.location, nil);
             }
         }
     }
