@@ -52,6 +52,12 @@
                                                                        @"name":@"opencv",
                                                                        @"url":@"https://github.com/opencv/opencv/archive/master.zip",
                                                                        }]];
+    [dataArr addObject:[NSMutableDictionary dictionaryWithDictionary:@{
+                                                                       @"idx":@"5",
+                                                                       @"name":@"一个mp3",
+                                                                       @"url":@"http://hao.1015600.com/upload/ring/000/994/64580a81318e0f69a1b03d4085e3a59b.mp3",
+                                                                       }]];
+
     //设置映射
     NSArray * tmpModelArr = [WZZHttpTool shareInstance].downloadModelDic.allKeys;
     for (int i = 0; i < tmpModelArr.count; i++) {
@@ -128,7 +134,6 @@
 }
 
 - (IBAction)backClick:(id)sender {
-    [WZZHttpTool saveDownloadData];
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -211,10 +216,16 @@
     } else {
         //还没任务，下载
         WZZDownloadTaskModel * model = [WZZHttpTool downloadWithUrl:dic[@"url"]];
+        __weak WZZDownloadTaskModel * am = model;
         dic[@"tid"] = model.taskId;
         model.tmpId = @(indexPath.row).stringValue;
         model.downloadCompleteBlock = ^(NSURL *location, NSError *error) {
             NSLog(@"%@", location?location:error);
+            if (!error) {
+                NSError * e;
+                [[NSFileManager defaultManager] moveItemAtURL:location toURL:[NSURL fileURLWithPath:[NSString stringWithFormat:@"%@/Documents/%@.%@", NSHomeDirectory(), am.taskId, [[am.url componentsSeparatedByString:@"."] lastObject]]] error:&e];
+                NSLog(@"fff%@", e);
+            }
         };
     }
 //    [tableView reloadData];

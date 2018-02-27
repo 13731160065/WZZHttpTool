@@ -312,7 +312,6 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
 }
 
 #pragma mark - 下载
-
 //MARK:开始下载
 + (WZZDownloadTaskModel *)downloadWithUrl:(NSString *)url {
     return [self downloadWithUrl:url bytes:@(0)];
@@ -324,11 +323,13 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     //配置请求
     NSURL * downUrl = [NSURL URLWithString:url];
     NSMutableURLRequest * downRequest = [NSMutableURLRequest requestWithURL:downUrl];
-#warning wzz这里似乎没生效
-    [downRequest setValue:[NSString stringWithFormat:@"bytes=%zd-", bytes.integerValue] forHTTPHeaderField:@"Range"];
+
+    if (![downUrl.absoluteString hasPrefix:@"https"]) {
+        [downRequest setValue:[NSString stringWithFormat:@"bytes=%zd-", bytes.integerValue] forHTTPHeaderField:@"Range"];
+    }
     
+    //任务
     NSURLSessionDataTask * task = [wzzHttpTool->downloadSession dataTaskWithRequest:downRequest];
-    [task resume];
     
     //生成模型
     NSString * tid = [self MD5:task.originalRequest.URL.absoluteString];
@@ -337,6 +338,11 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
         //继续
         NSDictionary * dic = wzzHttpTool.downloadModelDic;
         model = dic[tid];
+        
+        //本地文件
+        NSString * locationStr = [NSString stringWithFormat:@"%@/tmp/%@", NSHomeDirectory(), tid];
+        model.outStream = [NSOutputStream outputStreamWithURL:[NSURL fileURLWithPath:locationStr] append:YES];
+        model.location = [NSURL fileURLWithPath:locationStr];
     } else {
         //重新
         model = [[WZZDownloadTaskModel alloc] init];
@@ -344,14 +350,21 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
         NSMutableDictionary * dic = [NSMutableDictionary dictionaryWithDictionary:wzzHttpTool.downloadModelDic];
         dic[tid] = model;
         wzzHttpTool->_downloadModelDic = [NSDictionary dictionaryWithDictionary:dic];
+        
+        //本地文件
+        NSString * locationStr = [NSString stringWithFormat:@"%@/tmp/%@", NSHomeDirectory(), tid];
+        model.outStream = [NSOutputStream outputStreamWithURL:[NSURL fileURLWithPath:locationStr] append:YES];
+        model.location = [NSURL fileURLWithPath:locationStr];
+        //如果已下载删除下载
+        [[NSFileManager defaultManager] removeItemAtURL:model.location error:nil];
     }
     model.url = url;
     model.state = WZZHttpTool_Download_State_Loading;
     model.task = task;
     model.taskId = tid;
-    NSString * locationStr = [NSString stringWithFormat:@"%@/tmp/%@", NSHomeDirectory(), model.taskId];
-    model.outStream = [NSOutputStream outputStreamWithURL:[NSURL fileURLWithPath:locationStr] append:YES];
-    model.location = [NSURL fileURLWithPath:locationStr];
+    
+    //开始下载
+    [task resume];
     
     return model;
 }
@@ -360,30 +373,30 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
 + (WZZDownloadTaskModel *)resumeDownloadWithTaskId:(NSString *)taskId {
     wzzHttpTool = [WZZHttpTool shareInstance];
     WZZDownloadTaskModel * model = wzzHttpTool.downloadModelDic[taskId];
-    [self downloadWithUrl:model.url bytes:model.currentByte];
-    return model;
+    if ([model.url hasPrefix:@"https"]) {
+        return [self downloadWithUrl:model.url];
+    }
+    return [self downloadWithUrl:model.url bytes:model.currentByte];
 }
 
 //MARK:取消下载/删除下载
 + (void)cancelDownloadWithTaskId:(NSString *)taskId {
     wzzHttpTool = [WZZHttpTool shareInstance];
     WZZDownloadTaskModel * model = wzzHttpTool.downloadModelDic[taskId];
-    if (model.task) {
-        //取消任务
-        [model.task cancel];
-        
-        //删除下载
-        if (model.location) {
-            //如果已下载删除下载
-            [[NSFileManager defaultManager] removeItemAtURL:model.location error:nil];
-        }
-        
-        //移除数据
-        NSMutableDictionary * dic = [NSMutableDictionary dictionaryWithDictionary:wzzHttpTool.downloadModelDic];
-        model.state = WZZHttpTool_Download_State_None;
-        dic[taskId] = nil;
-        wzzHttpTool->_downloadModelDic = [NSDictionary dictionaryWithDictionary:dic];
+    //取消任务
+    [model.task cancel];
+    
+    //删除下载
+    if (model.location) {
+        //如果已下载删除下载
+        [[NSFileManager defaultManager] removeItemAtURL:model.location error:nil];
     }
+    
+    //移除数据
+    NSMutableDictionary * dic = [NSMutableDictionary dictionaryWithDictionary:wzzHttpTool.downloadModelDic];
+    model.state = WZZHttpTool_Download_State_None;
+    dic[taskId] = nil;
+    wzzHttpTool->_downloadModelDic = [NSDictionary dictionaryWithDictionary:dic];
 }
 
 /**
@@ -401,6 +414,7 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     }
     NSData * data = [NSKeyedArchiver archivedDataWithRootObject:wzzHttpTool.downloadModelDic];
     [[NSUserDefaults standardUserDefaults] setObject:data forKey:@"WZZHttpTool_downloadModelDic"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 /**
@@ -562,13 +576,21 @@ didCompleteWithError:(NSError *)error {
                 if (error.code == -1001) {
                     //暂停时间过长，超时
                     [model stop];
+                } else if (error.code == -1005) {
+                    //网络连接失败
+                    [model stop];
                 } else {
+                    //其他失败
                     model.state = WZZHttpTool_Download_State_Failed;
                     model.downloadCompleteBlock(nil, error);
+                    //如果已下载删除下载
+                    [[NSFileManager defaultManager] removeItemAtURL:model.location error:nil];
                 }
             } else {
                 model.state = WZZHttpTool_Download_State_Success;
                 model.downloadCompleteBlock(model.location, nil);
+                //如果已下载删除下载
+                [[NSFileManager defaultManager] removeItemAtURL:model.location error:nil];
             }
         }
     }
@@ -784,11 +806,9 @@ didCompleteWithError:(NSError *)error {
 
 //MARK:停止下载，可继续
 - (void)stop {
-    if (_task) {
-        if (_state == WZZHttpTool_Download_State_Loading || _state == WZZHttpTool_Download_State_Pause) {
-            _state = WZZHttpTool_Download_State_Stop;
-            [_task cancel];
-        }
+    if (_state == WZZHttpTool_Download_State_Loading || _state == WZZHttpTool_Download_State_Pause) {
+        _state = WZZHttpTool_Download_State_Stop;
+        [_task cancel];
     }
 }
 

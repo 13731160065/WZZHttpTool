@@ -239,7 +239,12 @@ typedef enum : NSUInteger {
     WZZHttpTool_Download_State_Loading,//下载中
     WZZHttpTool_Download_State_Pause,//暂停
     WZZHttpTool_Download_State_Stop,//停止
-} WZZHttpTool_Download_State;
+} WZZHttpTool_Download_State;//下载状态
+
+typedef enum : NSUInteger {
+    WZZHttpTool_Download_Type_HttpRange,//使用范围断点续传
+    WZZHttpTool_Download_Type_DownloadTask//使用下载任务断点续传
+} WZZHttpTool_Download_Type;//下载类型
 
 @interface WZZDownloadTaskModel : NSObject
 
@@ -279,6 +284,11 @@ typedef enum : NSUInteger {
 @property (nonatomic, strong) NSURL * location;
 
 /**
+ 恢复数据
+ */
+@property (nonatomic, strong) NSData * resumeData;
+
+/**
  下载状态
  */
 @property (nonatomic, assign) WZZHttpTool_Download_State state;
@@ -292,6 +302,11 @@ typedef enum : NSUInteger {
  输出流
  */
 @property (nonatomic, strong) NSOutputStream * outStream;
+
+/**
+ 下载类型
+ */
+@property (nonatomic, assign) WZZHttpTool_Download_Type downloadType;
 
 /**
  进度回调
