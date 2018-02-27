@@ -138,12 +138,12 @@ failedBlock:(void(^)(NSError * httpError))failedBlock;
 + (void)cancelDownloadWithTaskId:(NSString *)taskId;
 
 /**
- 本地存储下载数据
+ 本地存储下载数据，程序将要结束时调用
  */
 + (void)saveDownloadData;
 
 /**
- 读取本地下载数据
+ 读取本地下载数据，一般用不到
  */
 + (void)loadDownloadData;
 
