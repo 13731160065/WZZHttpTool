@@ -14,7 +14,13 @@ typedef enum {
     WZZHttpToolBodyType_textPlain = 0,
     WZZHttpToolBodyType_jsonData,
     WZZHttpToolBodyType_default = WZZHttpToolBodyType_textPlain
-}WZZHttpToolBodyType;
+}WZZHttpToolBodyType;//请求体类型
+
+typedef enum : NSUInteger {
+    WZZHttpTool_Download_Type_HttpRange,//使用范围断点续传
+    WZZHttpTool_Download_Type_DownloadTask,//使用下载任务断点续传
+    WZZHttpTool_Download_Type_Default = WZZHttpTool_Download_Type_HttpRange
+} WZZHttpTool_Download_Type;//下载类型
 
 @interface WZZHttpTool : NSObject
 
@@ -22,6 +28,11 @@ typedef enum {
  请求体类型
  */
 @property (nonatomic, assign) WZZHttpToolBodyType bodyType;
+
+/**
+ 下载使用的类型
+ */
+@property (nonatomic, assign) WZZHttpTool_Download_Type downloadType;
 
 /**
  下载数据
@@ -57,6 +68,7 @@ typedef enum {
  failedBlock    失败回调
  */
 + (void)GET:(NSString *)url
+urlParamDic:(NSDictionary *)urlParamDic
 successBlock:(void(^)(id httpResponse))successBlock
 failedBlock:(void(^)(NSError * httpError))failedBlock;
 
@@ -147,11 +159,6 @@ failedBlock:(void(^)(NSError * httpError))failedBlock;
  */
 + (void)loadDownloadData;
 
-/**
- 后台下载模式
- */
-+ (void)downloadBackGroundMode;
-
 #pragma mark - 工具
 /**
  json转对象
@@ -240,11 +247,6 @@ typedef enum : NSUInteger {
     WZZHttpTool_Download_State_Pause,//暂停
     WZZHttpTool_Download_State_Stop,//停止
 } WZZHttpTool_Download_State;//下载状态
-
-typedef enum : NSUInteger {
-    WZZHttpTool_Download_Type_HttpRange,//使用范围断点续传
-    WZZHttpTool_Download_Type_DownloadTask//使用下载任务断点续传
-} WZZHttpTool_Download_Type;//下载类型
 
 @interface WZZDownloadTaskModel : NSObject
 

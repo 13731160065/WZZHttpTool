@@ -67,13 +67,14 @@ void showMessage(id msg) {
     
     //get请求测试
     aBlock = ^{
-        [WZZHttpTool GET:@"https://api.wdquan.cn/comment/auto?section=1"
-             successBlock:^(id httpResponse) {
-                 showMessage(httpResponse);
-             }
-              failedBlock:^(NSError *httpError) {
-                  showMessage(httpError);
-              }];
+        [WZZHttpTool GET:@"https://api.wdquan.cn/comment/auto"
+             urlParamDic:@{@"section":@"1"}
+            successBlock:^(id httpResponse) {
+                showMessage(httpResponse);
+            }
+             failedBlock:^(NSError *httpError) {
+                 showMessage(httpError);
+             }];
     };
     [dataArr addObject:@{
                          @"name":@"get请求测试",
@@ -189,7 +190,7 @@ void showMessage(id msg) {
     [dataArr addObject:@{
                          @"name":@"多任务下载",
                          @"block":aBlock,
-                         @"hud":@(NO)
+                         @"hud":@(YES)
                          }];
     
     [mainTableView reloadData];
@@ -212,7 +213,7 @@ void showMessage(id msg) {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     void(^aBlock)();
     aBlock = dataArr[indexPath.row][@"block"];
-    if ([dataArr[indexPath.row][@"hud"] integerValue]) {
+    if (![dataArr[indexPath.row][@"hud"] integerValue]) {
         alt = [UIAlertController alertControllerWithTitle:@"请稍等" message:nil preferredStyle:UIAlertControllerStyleAlert];
         [self presentViewController:alt animated:YES completion:^{
             aBlock();

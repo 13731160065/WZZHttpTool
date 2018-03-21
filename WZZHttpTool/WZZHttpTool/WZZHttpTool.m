@@ -16,7 +16,6 @@ static WZZHttpTool * wzzHttpTool;
 @interface WZZHttpTool ()<NSURLSessionDelegate, NSURLSessionDataDelegate>
 {
     NSURLSession * downloadSession;//下载会话
-    NSURLSession * downloadBackgroundSession;//后台下载会话
 }
 
 @end
@@ -32,11 +31,12 @@ static WZZHttpTool * wzzHttpTool;
         //请求体类型
         wzzHttpTool.bodyType = WZZHttpToolBodyType_default;
         
+        //下载类型
+        wzzHttpTool.downloadType = WZZHttpTool_Download_Type_DownloadTask;
+        
         //下载会话
         NSURLSessionConfiguration * conf = [NSURLSessionConfiguration defaultSessionConfiguration];
         wzzHttpTool->downloadSession = [NSURLSession sessionWithConfiguration:conf delegate:wzzHttpTool delegateQueue:nil];
-        NSURLSessionConfiguration * bgconf = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"WZZHttpTool_downloadBackgroundSession"];
-        wzzHttpTool->downloadBackgroundSession = [NSURLSession sessionWithConfiguration:bgconf delegate:wzzHttpTool delegateQueue:nil];
         
         //加载下载数据
         [self loadDownloadData];
@@ -206,8 +206,9 @@ static WZZHttpTool * wzzHttpTool;
         } else {
             id responseObj = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&err2];
             if (err2) {
-                if (failedBlock) {
-                    failedBlock(err2);
+                NSString * dataStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                if (successBlock) {
+                    successBlock(dataStr?dataStr:data);
                 }
             } else {
                 if (successBlock) {
@@ -223,8 +224,21 @@ static WZZHttpTool * wzzHttpTool;
 
 //MARK:GET请求
 + (void)GET:(NSString *)url
+urlParamDic:(NSDictionary *)urlParamDic
 successBlock:(void(^)(id httpResponse))successBlock
 failedBlock:(void(^)(NSError * httpError))failedBlock {
+    if (urlParamDic) {
+        NSArray * arr = urlParamDic.allKeys;
+        NSMutableArray * bodyArr = [NSMutableArray array];
+        for (int i = 0; i < arr.count; i++) {
+            NSString * key = arr[i];
+            NSString * value = urlParamDic[key];
+            [bodyArr addObject:[NSString stringWithFormat:@"%@=%@", key, value]];
+        }
+        NSString * bodyStr = [bodyArr componentsJoinedByString:@"&"];
+        url = [url stringByAppendingFormat:@"%@%@", [url containsString:@"?"]?@"&":@"?", bodyStr];
+    }
+    url = [url stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
     [self requestWithMethod:@"GET" url:url httpHeader:nil httpBody:nil bodyType:[WZZHttpTool shareInstance].bodyType successBlock:^(id httpResponse) {
         if (successBlock) {
             successBlock(httpResponse);
@@ -327,7 +341,12 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     if (![downUrl.absoluteString hasPrefix:@"https"]) {
         [downRequest setValue:[NSString stringWithFormat:@"bytes=%zd-", bytes.integerValue] forHTTPHeaderField:@"Range"];
     }
-    
+
+//    if (wzzHttpTool.downloadType == WZZHttpTool_Download_Type_DownloadTask) {
+//        NSURLSessionDownloadTask * task = [wzzHttpTool->downloadSession downloadTaskWithRequest:downRequest];
+//
+//        [task resume];
+//    }
     //任务
     NSURLSessionDataTask * task = [wzzHttpTool->downloadSession dataTaskWithRequest:downRequest];
     
@@ -429,22 +448,6 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     }
 }
 
-/**
- 后台下载模式
- */
-+ (void)downloadBackGroundMode {
-    NSDictionary * dic = [wzzHttpTool downloadModelDic];
-    NSArray * keysArr = [dic allKeys];
-    for (int i = 0; i < keysArr.count; i++) {
-        NSString * key = keysArr[i];
-        WZZDownloadTaskModel * model = dic[key];
-        if (model.state == WZZHttpTool_Download_State_Loading) {
-            [model stop];
-            
-        }
-    }
-}
-
 #pragma mark - 工具
 //MARK:json字符串转对象
 + (id)jsonToObject:(NSString *)jsonString {
@@ -508,7 +511,7 @@ didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
     
     NSURLCredential *credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
     
-    completionHandler(NSURLSessionAuthChallengePerformDefaultHandling,credential);
+    completionHandler(NSURLSessionAuthChallengeUseCredential ,credential);
 }
 
 /**

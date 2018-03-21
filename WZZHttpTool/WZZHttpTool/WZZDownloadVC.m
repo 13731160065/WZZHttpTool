@@ -222,6 +222,13 @@
         model.downloadCompleteBlock = ^(NSURL *location, NSError *error) {
             NSLog(@"%@", location?location:error);
             if (!error) {
+                //本地推送
+                UILocalNotification *localNotification = [[UILocalNotification alloc] init];
+                localNotification.alertBody = [NSString stringWithFormat:@"“%@”下载完成", dic[@"name"]];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [[UIApplication sharedApplication] presentLocalNotificationNow:localNotification];
+                });
+                
                 NSError * e;
                 [[NSFileManager defaultManager] moveItemAtURL:location toURL:[NSURL fileURLWithPath:[NSString stringWithFormat:@"%@/Documents/%@.%@", NSHomeDirectory(), am.taskId, [[am.url componentsSeparatedByString:@"."] lastObject]]] error:&e];
                 NSLog(@"fff%@", e);
