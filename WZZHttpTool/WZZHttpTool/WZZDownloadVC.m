@@ -225,7 +225,7 @@
                 //本地推送
                 UILocalNotification *localNotification = [[UILocalNotification alloc] init];
                 localNotification.alertBody = [NSString stringWithFormat:@"“%@”下载完成", dic[@"name"]];
-                dispatch_async(dispatch_get_main_queue(), ^{
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0f * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     [[UIApplication sharedApplication] presentLocalNotificationNow:localNotification];
                 });
                 

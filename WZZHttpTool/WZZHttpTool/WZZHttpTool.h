@@ -142,7 +142,7 @@ failedBlock:(void(^)(NSError * httpError))failedBlock;
 /**
  本地存储下载数据，程序将要结束时调用
  */
-+ (void)saveDownloadData;
++ (void)downloadWillTerminate;
 
 /**
  读取本地下载数据，一般用不到
@@ -154,7 +154,7 @@ failedBlock:(void(^)(NSError * httpError))failedBlock;
 
  @param application 程序
  */
-+ (void)gotoBackgroundModeWithApplication:(UIApplication *)application;
++ (void)downloadWillResignActive:(UIApplication *)application;
 
 #pragma mark - 工具
 /**

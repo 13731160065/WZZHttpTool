@@ -420,7 +420,7 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
 /**
  保存下载数据
  */
-+ (void)saveDownloadData {
++ (void)downloadWillTerminate {
     wzzHttpTool = [WZZHttpTool shareInstance];
     if (wzzHttpTool.downloadModelDic) {
         NSArray * arr = wzzHttpTool.downloadModelDic.allKeys;
@@ -447,7 +447,7 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     }
 }
 
-+ (void)gotoBackgroundModeWithApplication:(UIApplication *)application {
++ (void)downloadWillResignActive:(UIApplication *)application {
     [self _gotoBackgroundLoopWithApplication:application];
 }
 
@@ -550,6 +550,7 @@ didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
     
     model.currentByte = @(model.currentByte.integerValue+data.length);
     model.progress = @(model.currentByte.doubleValue/model.totalByte.doubleValue);
+    NSLog(@"%@", model.progress);
     if (model.progressBlock) {
         model.progressBlock(model.progress);
     }
