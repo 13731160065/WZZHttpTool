@@ -8,6 +8,7 @@
 
 #import "WZZHttpTool.h"
 #import <CommonCrypto/CommonDigest.h>
+@import UIKit;
 
 #define WZZHTTPTOOLBOUNDARY @"${wzzhttptoolboundary}"
 
@@ -16,6 +17,7 @@ static WZZHttpTool * wzzHttpTool;
 @interface WZZHttpTool ()<NSURLSessionDelegate, NSURLSessionDataDelegate>
 {
     NSURLSession * downloadSession;//下载会话
+    UIBackgroundTaskIdentifier backDownloadId;//后台下载id
 }
 
 @end
@@ -30,9 +32,6 @@ static WZZHttpTool * wzzHttpTool;
         
         //请求体类型
         wzzHttpTool.bodyType = WZZHttpToolBodyType_default;
-        
-        //下载类型
-        wzzHttpTool.downloadType = WZZHttpTool_Download_Type_DownloadTask;
         
         //下载会话
         NSURLSessionConfiguration * conf = [NSURLSessionConfiguration defaultSessionConfiguration];
@@ -446,6 +445,27 @@ failedBlock:(void(^)(NSError * httpError))failedBlock {
     } else {
         wzzHttpTool->_downloadModelDic = nil;
     }
+}
+
++ (void)gotoBackgroundModeWithApplication:(UIApplication *)application {
+    [self _gotoBackgroundLoopWithApplication:application];
+}
+
++ (void)_gotoBackgroundLoopWithApplication:(UIApplication *)application {
+    __block UIBackgroundTaskIdentifier backId;
+    backId = [application beginBackgroundTaskWithExpirationHandler:^{
+//        NSDictionary * dic = wzzHttpTool->_downloadModelDic;
+//        NSArray * keysArr = [dic allKeys];
+//        for (int i = 0; i < keysArr.count; i++) {
+//            NSString * key = keysArr[i];
+//            WZZDownloadTaskModel * model = dic[key];
+//            [model stop];
+//        }
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(9 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [application endBackgroundTask:backId];
+            [self _gotoBackgroundLoopWithApplication:application];
+        });
+    }];
 }
 
 #pragma mark - 工具

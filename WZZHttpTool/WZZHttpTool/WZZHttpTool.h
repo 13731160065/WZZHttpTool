@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 @class WZZPOSTFormData;
 @class WZZDownloadTaskModel;
+@import UIKit;
 
 typedef enum {
     WZZHttpToolBodyType_textPlain = 0,
@@ -16,23 +17,12 @@ typedef enum {
     WZZHttpToolBodyType_default = WZZHttpToolBodyType_textPlain
 }WZZHttpToolBodyType;//请求体类型
 
-typedef enum : NSUInteger {
-    WZZHttpTool_Download_Type_HttpRange,//使用范围断点续传
-    WZZHttpTool_Download_Type_DownloadTask,//使用下载任务断点续传
-    WZZHttpTool_Download_Type_Default = WZZHttpTool_Download_Type_HttpRange
-} WZZHttpTool_Download_Type;//下载类型
-
 @interface WZZHttpTool : NSObject
 
 /**
  请求体类型
  */
 @property (nonatomic, assign) WZZHttpToolBodyType bodyType;
-
-/**
- 下载使用的类型
- */
-@property (nonatomic, assign) WZZHttpTool_Download_Type downloadType;
 
 /**
  下载数据
@@ -158,6 +148,13 @@ failedBlock:(void(^)(NSError * httpError))failedBlock;
  读取本地下载数据，一般用不到
  */
 + (void)loadDownloadData;
+
+/**
+ 进入后台
+
+ @param application 程序
+ */
++ (void)gotoBackgroundModeWithApplication:(UIApplication *)application;
 
 #pragma mark - 工具
 /**
@@ -304,11 +301,6 @@ typedef enum : NSUInteger {
  输出流
  */
 @property (nonatomic, strong) NSOutputStream * outStream;
-
-/**
- 下载类型
- */
-@property (nonatomic, assign) WZZHttpTool_Download_Type downloadType;
 
 /**
  进度回调
