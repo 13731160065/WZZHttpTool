@@ -223,6 +223,13 @@ static WZZHttpTool * wzzHttpTool;
 
 //MARK:GET请求
 + (void)GET:(NSString *)url
+successBlock:(void (^)(id))successBlock
+failedBlock:(void (^)(NSError *))failedBlock {
+    [self GET:url urlParamDic:nil successBlock:successBlock failedBlock:failedBlock];
+}
+
+//MARK:GET请求，参数字典
++ (void)GET:(NSString *)url
 urlParamDic:(NSDictionary *)urlParamDic
 successBlock:(void(^)(id httpResponse))successBlock
 failedBlock:(void(^)(NSError * httpError))failedBlock {

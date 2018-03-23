@@ -58,6 +58,17 @@ typedef enum {
  failedBlock    失败回调
  */
 + (void)GET:(NSString *)url
+successBlock:(void(^)(id httpResponse))successBlock
+failedBlock:(void(^)(NSError * httpError))failedBlock;
+
+/**
+ GET请求
+ GET            url地址
+ urlParamDic    参数
+ successBlock   成功回调
+ failedBlock    失败回调
+ */
++ (void)GET:(NSString *)url
 urlParamDic:(NSDictionary *)urlParamDic
 successBlock:(void(^)(id httpResponse))successBlock
 failedBlock:(void(^)(NSError * httpError))failedBlock;
