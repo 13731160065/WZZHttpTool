@@ -119,7 +119,7 @@ static WZZHttpTool * wzzHttpTool;
         if (formDataArr.count) {
             //添加multipart请求头
             NSMutableDictionary * hDic = [NSMutableDictionary dictionaryWithDictionary:headerDic];
-            hDic[@"Content-Type"] = [NSString stringWithFormat:@"multipart/form-data boundary=%@", WZZHTTPTOOLBOUNDARY];
+            hDic[@"Content-Type"] = [NSString stringWithFormat:@"multipart/form-data; boundary=%@", WZZHTTPTOOLBOUNDARY];
             req.allHTTPHeaderFields = hDic;
         }
         
