@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "WZZHttpTool"
-  s.version      = "1.0.2"
+  s.version      = "1.0.3"
   s.summary      = "WZZHttpTool是一个机遇NSURLSession封装的http协议的网络请求工具"
 
   # This description is used to generate tags and improve search results.
@@ -67,7 +67,7 @@ Pod::Spec.new do |s|
 
   #  When using multiple platforms
   s.ios.deployment_target = "8.0"
-  s.osx.deployment_target = "10.9"
+  #s.osx.deployment_target = "10.9"
   # s.watchos.deployment_target = "2.0"
   # s.tvos.deployment_target = "9.0"
 
@@ -115,7 +115,7 @@ Pod::Spec.new do |s|
   #  the lib prefix of their name.
   #
 
-  # s.framework  = "SomeFramework"
+  s.framework  = "UIKit"
   # s.frameworks = "SomeFramework", "AnotherFramework"
 
   # s.library   = "iconv"
