@@ -16,6 +16,8 @@
 		710344DB1ED04A6D0007AEF7 /* WZZHttpToolTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 710344DA1ED04A6D0007AEF7 /* WZZHttpToolTests.m */; };
 		710344E61ED04A6D0007AEF7 /* WZZHttpToolUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 710344E51ED04A6D0007AEF7 /* WZZHttpToolUITests.m */; };
 		710344F51ED0552E0007AEF7 /* WZZHttpTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 710344F41ED0552E0007AEF7 /* WZZHttpTool.m */; };
+		7131C30920CF90AF007BBB37 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7131C30820CF90AF007BBB37 /* UIKit.framework */; };
+		7131C30B20CF90BA007BBB37 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7131C30A20CF90BA007BBB37 /* Foundation.framework */; };
 		C51AE5251FDF919D00CE60AC /* imggg.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C51AE5241FDF919400CE60AC /* imggg.jpg */; };
 		C544C09C203FE7D200D20B20 /* WZZDownloadVC.m in Sources */ = {isa = PBXBuildFile; fileRef = C544C09A203FE7D200D20B20 /* WZZDownloadVC.m */; };
 		C544C09D203FE7D200D20B20 /* WZZDownloadVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = C544C09B203FE7D200D20B20 /* WZZDownloadVC.xib */; };
@@ -57,6 +59,8 @@
 		710344E71ED04A6D0007AEF7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		710344F31ED0552E0007AEF7 /* WZZHttpTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WZZHttpTool.h; sourceTree = "<group>"; };
 		710344F41ED0552E0007AEF7 /* WZZHttpTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WZZHttpTool.m; sourceTree = "<group>"; };
+		7131C30820CF90AF007BBB37 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		7131C30A20CF90BA007BBB37 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		C51AE5241FDF919400CE60AC /* imggg.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = imggg.jpg; sourceTree = "<group>"; };
 		C544C099203FE7D200D20B20 /* WZZDownloadVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WZZDownloadVC.h; sourceTree = "<group>"; };
 		C544C09A203FE7D200D20B20 /* WZZDownloadVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WZZDownloadVC.m; sourceTree = "<group>"; };
@@ -68,6 +72,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7131C30B20CF90BA007BBB37 /* Foundation.framework in Frameworks */,
+				7131C30920CF90AF007BBB37 /* UIKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -95,6 +101,7 @@
 				710344D91ED04A6D0007AEF7 /* WZZHttpToolTests */,
 				710344E41ED04A6D0007AEF7 /* WZZHttpToolUITests */,
 				710344BE1ED04A6C0007AEF7 /* Products */,
+				7131C30720CF90AF007BBB37 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -154,6 +161,15 @@
 				710344E71ED04A6D0007AEF7 /* Info.plist */,
 			);
 			path = WZZHttpToolUITests;
+			sourceTree = "<group>";
+		};
+		7131C30720CF90AF007BBB37 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7131C30A20CF90BA007BBB37 /* Foundation.framework */,
+				7131C30820CF90AF007BBB37 /* UIKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
