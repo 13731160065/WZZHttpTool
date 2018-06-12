@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "WZZHttpTool"
-  s.version      = "1.0.0"
+  s.version      = "1.0.1"
   s.summary      = "WZZHttpTool是一个机遇NSURLSession封装的http协议的网络请求工具"
 
   # This description is used to generate tags and improve search results.
