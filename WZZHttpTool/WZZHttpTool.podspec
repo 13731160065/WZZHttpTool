@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "WZZHttpTool"
-  s.version      = "1.0.1"
+  s.version      = "1.0.2"
   s.summary      = "WZZHttpTool是一个机遇NSURLSession封装的http协议的网络请求工具"
 
   # This description is used to generate tags and improve search results.
@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
   #   * Try to keep it short, snappy and to the point.
   #   * Write the description between the DESC delimiters below.
   #   * Finally, don't worry about the indent, CocoaPods strips it!
-  s.description  = "支持常见的http请求"
+  s.description  = "WZZHttpTool是一个机遇NSURLSession封装的http协议的网络请>    求工具。支持常见的http请求"
 
   s.homepage     = "https://github.com/13731160065/WZZHttpTool.git"
   # s.screenshots  = "www.example.com/screenshots_1.gif", "www.example.com/screenshots_2.gif"
