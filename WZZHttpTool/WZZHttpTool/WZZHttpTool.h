@@ -7,9 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 @class WZZPOSTFormData;
 @class WZZDownloadTaskModel;
-@import UIKit;
 
 typedef enum {
     WZZHttpToolBodyType_textPlain = 0,
