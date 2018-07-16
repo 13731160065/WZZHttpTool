@@ -10,7 +10,7 @@
 #import <CommonCrypto/CommonDigest.h>
 @import UIKit;
 
-#define WZZHTTPTOOLBOUNDARY @"${wzzhttptoolboundary}"
+#define WZZHTTPTOOLBOUNDARY @"__wzzhttptoolboundary__"
 
 static WZZHttpTool * wzzHttpTool;
 
